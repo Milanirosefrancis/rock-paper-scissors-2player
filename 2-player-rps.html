@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>2-Player Rock Paper Scissors</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(to right, #36d1dc, #5b86e5);
+      text-align: center;
+      padding: 40px;
+      color: white;
+    }
+
+    .game-container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 2.2em;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+
+    .score-board {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+
+    .choices {
+      margin: 20px 0;
+    }
+
+    .choice {
+      background: #ffffffcc;
+      border: none;
+      font-size: 1.2em;
+      padding: 10px 20px;
+      margin: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s;
+    }
+
+    .choice:hover {
+      transform: scale(1.1);
+      background: #fff;
+      color: #000;
+    }
+
+    #result, #turn-info {
+      font-size: 1.3em;
+      margin-top: 20px;
+    }
+
+    #play-again {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1.1em;
+      background: #ffcc00;
+      border: none;
+      border-radius: 10px;
+      color: #000;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #play-again:hover {
+      background: #fff500;
+    }
+
+    @keyframes winner {
+      0% { transform: scale(1); background-color: #aaffaa; }
+      50% { transform: scale(1.2); background-color: #66ff66; }
+      100% { transform: scale(1); background-color: #aaffaa; }
+    }
+
+    .winner-animate {
+      animation: winner 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>👥 2-Player Rock Paper Scissors</h1>
+
+    <div class="score-board">
+      <p>Player 1: <span id="player1-score">0</span></p>
+      <p>Player 2: <span id="player2-score">0</span></p>
+    </div>
+
+    <h2 id="turn-info">Player 1, make your move!</h2>
+
+    <div class="choices">
+      <button class="choice" data-choice="rock">✊ Rock</button>
+      <button class="choice" data-choice="paper">✋ Paper</button>
+      <button class="choice" data-choice="scissors">✌️ Scissors</button>
+    </div>
+
+    <h2 id="result">Waiting for both players...</h2>
+
+    <button id="play-again">🔄 Play Again</button>
+  </div>
+
+  <!-- Sound Effects -->
+  <audio id="click-sound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+  <audio id="win-sound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+
+  <script>
+    const choices = document.querySelectorAll('.choice');
+    const player1ScoreSpan = document.getElementById('player1-score');
+    const player2ScoreSpan = document.getElementById('player2-score');
+    const resultText = document.getElementById('result');
+    const turnInfo = document.getElementById('turn-info');
+    const playAgainBtn = document.getElementById('play-again');
+
+    const clickSound = document.getElementById('click-sound');
+    const winSound = document.getElementById('win-sound');
+
+    let player1Score = 0;
+    let player2Score = 0;
+    let turn = 1;
+    let player1Choice = "";
+    let player2Choice = "";
+
+    choices.forEach(choice => {
+      choice.addEventListener('click', () => {
+        clickSound.play();
+        const selected = choice.getAttribute('data-choice');
+
+        if (turn === 1) {
+          player1Choice = selected;
+          turn = 2;
+          turnInfo.textContent = "Player 2, your turn!";
+        } else if (turn === 2) {
+          player2Choice = selected;
+          turn = 1;
+          checkWinner();
+        }
+      });
+    });
+
+    function checkWinner() {
+      removeAnimations();
+      let winner = getWinner(player1Choice, player2Choice);
+
+      if (winner === 'draw') {
+        resultText.textContent = `😐 It's a Draw! Both chose ${player1Choice}`;
+      } else if (winner === 'player1') {
+        player1Score++;
+        resultText.textContent = `🎉 Player 1 Wins! ${player1Choice} beats ${player2Choice}`;
+        animateWinner(player1Choice);
+        winSound.play();
+      } else {
+        player2Score++;
+        resultText.textContent = `🎉 Player 2 Wins! ${player2Choice} beats ${player1Choice}`;
+        animateWinner(player2Choice);
+        winSound.play();
+      }
+
+      player1ScoreSpan.textContent = player1Score;
+      player2ScoreSpan.textContent = player2Score;
+      turnInfo.textContent = "Player 1, make your move!";
+    }
+
+    function getWinner(p1, p2) {
+      if (p1 === p2) return 'draw';
+
+      if (
+        (p1 === 'rock' && p2 === 'scissors') ||
+        (p1 === 'scissors' && p2 === 'paper') ||
+        (p1 === 'paper' && p2 === 'rock')
+      ) {
+        return 'player1';
+      } else {
+        return 'player2';
+      }
+    }
+
+    function animateWinner(choice) {
+      const button = document.querySelector(`.choice[data-choice="${choice}"]`);
+      if (button) button.classList.add('winner-animate');
+    }
+
+    function removeAnimations() {
+      choices.forEach(choice => {
+        choice.classList.remove('winner-animate');
+      });
+    }
+
+    playAgainBtn.addEventListener('click', () => {
+      player1Score = 0;
+      player2Score = 0;
+      player1Choice = "";
+      player2Choice = "";
+      player1ScoreSpan.textContent = "0";
+      player2ScoreSpan.textContent = "0";
+      resultText.textContent = "Waiting for both players...";
+      turnInfo.textContent = "Player 1, make your move!";
+      removeAnimations();
+    });
+  </script>
+</body>
+</html>
